@@ -125,6 +125,7 @@ def printTree(node,depth):
 	printTree(node.leaves[1],depth+1)
 
 def DT_test_binary(X,Y,DT):
+
 	pass
 
 if __name__ == "__main__":
@@ -159,12 +160,12 @@ if __name__ == "__main__":
 	test8 = np.array([[0,1],[0,0],[1,0],[0,0],[1,1]])
 	test8label = np.array([[1],[0],[0],[0],[1]])
 
-	#DT_train_binary(test1,test1label,max_depth)
+	DT_train_binary(test1,test1label,max_depth)
 	#DT_train_binary(test3,test3label,5)
 	#DT_train_binary(test4,test4label,5)
 	#DT_train_binary(test5,test5label,5)
 	#DT_train_binary(test6,test6label,5)
-	DT_train_binary(test7,test7label,-1)
+	#DT_train_binary(test7,test7label,-1)
 	#DT_train_binary(test8,test8label,-1)
 
 
