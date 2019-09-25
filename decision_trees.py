@@ -89,9 +89,10 @@ def calcHeuristic(Y):
 			yesCount +=1
 		total +=1 
 
-	percent = yesCount/total # this is the percent of yeses
+
 	# This checks if python will run into a RuntimeWarning b/c log(0)
 	try:
+		percent = yesCount/total # this is the percent of yeses
 		h = percent*math.log2(percent)
 		h += (1-percent)*math.log2(1-percent)
 	except:
@@ -119,9 +120,28 @@ def findGreatestLabel(Y):
 	else:
 		return 1
 
-
 def DT_test_binary(X,Y,DT):
-	pass
+	correntCount = 0
+	for i in range(0,len(X)):
+		result = DT_test_binary_helper(X[i],DT)
+		if(result == Y[i]):
+			correntCount +=1
+
+	# print(correntCount / len(X))
+	return correntCount / len(X)
+
+def DT_test_binary_helper(X,DT):
+	# Left Side
+	if(isinstance(DT[1],int) and X[DT[0]] == 0):
+		return DT[1]
+	# Right side
+	elif(isinstance(DT[2],int) and X[DT[0]] == 1):
+		return DT[2]
+	else:
+		if(X[DT[0]] == 0):
+			return DT_test_binary_helper(X,DT[1])
+		else:
+			return DT_test_binary_helper(X,DT[2])
 
 if __name__ == "__main__":
 	#first example in project
@@ -129,7 +149,7 @@ if __name__ == "__main__":
 	Y = np.array([[1],[1],[0]])
 
 	#netflix
-	test1 = np.array([[1,1,0,0],[1,1,1,1],[1,1,1,1],[0,0,0,1],[0,0,1,1],[0,0,1,0],[0,0,0,0],[1,0,1,0],[1,1,1,0],[0,0,1,1]])
+	test1 = np.array([[1,1,1,0],[1,1,1,1],[1,1,1,1],[0,0,0,1],[0,0,1,1],[0,0,1,0],[0,0,0,0],[1,0,1,0],[1,1,1,0],[0,0,1,1]])
 	test1label = np.array([[0],[1],[1],[0],[0],[1],[0],[0],[1],[0]])
 	# all 8
 	test2 = np.array([[1,1,1,0,1,1,0],[0,0,1,1,0,1,1],[0,1,0,0,1,0,0],[1,1,0,1,0,0,1],[1,0,1,0,1,1,1],[1,1,0,1,1,0,1],[1,1,0,0,1,1,0],[0,0,0,1,0,1,1]])
@@ -155,13 +175,11 @@ if __name__ == "__main__":
 	test8 = np.array([[0,1],[0,0],[1,0],[0,0],[1,1]])
 	test8label = np.array([[1],[0],[0],[0],[1]])
 
-	DT_train_binary(test1,test1label,max_depth)
+	DT = DT_train_binary(test1,test1label,-1)
 	#DT_train_binary(test3,test3label,5)
 	#DT_train_binary(test4,test4label,5)
 	#DT_train_binary(test5,test5label,5)
 	#DT_train_binary(test6,test6label,5)
 	#DT_train_binary(test7,test7label,-1)
 	#DT_train_binary(test8,test8label,-1)
-
-
-
+	accuracy = DT_test_binary(test1,test1label,DT)
