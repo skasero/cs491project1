@@ -1,71 +1,78 @@
 #!/usr/bin/python3
 import numpy as np
-import tree as tree 
+import sys # Used for getting a max value
+import math # Used for log, sorry np.log2 is trash because I can't use try/except blocks
 
 def DT_train_binary(X,Y,max_depth):
-	h = calcHeuristic(X,Y) 
-	DT = DT_train_binary_helper(X,Y,max_depth,h,0)
-	print("root: " + str(DT.key))
-	printTree(DT,1)
+	h = calcHeuristic(Y) 
+	# print(h)
+	featuresUsed = []
+	for i in range(0,len(X[0])):
+		featuresUsed.append(i)
+	DT = DT_train_binary_helper(X,Y,max_depth,h,0,featuresUsed)
+	print(DT)
 	return DT
 
-def DT_train_binary_helper(X,Y,max_depth,h,currentDepth = 0,featuresUsed = list()):
-	print("\n depth: ", currentDepth)
-	# Found that there are no more Samples to check in X
-	if(max_depth == -1 and len(X) <= 1):
-		return None
-	elif(max_depth != -1 and currentDepth >= max_depth):
-		return None
+def DT_train_binary_helper(X,Y,max_depth,h,currentDepth,featuresUsed):
+	# Checking if were at the current max depth or if all features have been used
+	# Also checks if h is 0
+	if(max_depth == currentDepth or not featuresUsed or h==0):
+		return findGreatestLabel(Y)
+	
+	# This is like -INT_MAX in C++. I could just use a small number, but...
+	# These variables are used to keep track of the best values based on which feature
+	# has the highest information gain (IG)
+	bestIG = -sys.maxsize-1 
+	bestFeature = -sys.maxsize-1 
+	bestHNo = -sys.maxsize-1 
+	bestHYes = -sys.maxsize-1 
+	bestXNo = []
+	bestXYes = []
+	bestYNo = []
+	bestYYes = []
 
-	nodeArray = []
-	for i in range(0,len(X[0])):
-		if(i not in featuresUsed):
-			leftHeuristic = calcHeuristic(X,Y,False,i)
-			rightHeuristic = calcHeuristic(X,Y,True,i)
-			ig = calcIG(h,leftHeuristic,rightHeuristic,X,i)
-			n = tree.Node(i,leftHeuristic,rightHeuristic,ig)
-			#print(str(leftHeuristic) + " " + str(rightHeuristic))
-			print(ig)
-			nodeArray.append(n)
-	if(len(nodeArray) == 0):
-		return None
+	# Loops through all possible features still in use
+	for item in featuresUsed:
+		xNo = []
+		xYes = []
+		yNo = []
+		yYes = []
+		for i in range(0,len(X)):
+			if(X[i][item] == 0):
+				xNo.append(X[i])
+				yNo.append(Y[i])
+			else:
+				xYes.append(X[i])
+				yYes.append(Y[i])
 
-	highestIG = 0
-	index = 0
-	featureNumber = 0
-	for node in nodeArray:
-		if(node.ig > highestIG):
-			highestIG = node.ig
-			featureNumber = node.key
-			index = nodeArray.index(node)
-	featuresUsed.append(featureNumber)
+		hNo = calcHeuristic(yNo)
+		hYes = calcHeuristic(yYes)
+		# print(hNo)
+		# print(hYes)
 
-	node = nodeArray[index]
-	if(node.leftHeuristic == 0 and node.rightHeuristic != 0):
-		print("right")
-		X,Y = removeFeature(0,X,Y,featureNumber)
-		node.add_leaves(None,DT_train_binary_helper(X,Y,max_depth,node.rightHeuristic,currentDepth+1,featuresUsed))
-	elif(node.leftHeuristic != 0 and node.rightHeuristic == 0):
-		print("left")
-		X,Y = removeFeature(1,X,Y,featureNumber)
-		node.add_leaves(DT_train_binary_helper(X,Y,max_depth,node.leftHeuristic,currentDepth+1,featuresUsed),None)
-	elif(node.leftHeuristic == 0 and node.rightHeuristic == 0):
-		print("empty")
-		node.add_leaves(None,None)
-	elif(node.leftHeuristic != 0 and node.rightHeuristic != 0):
-		print("2 splits")
-		node.add_leaves(DT_train_binary_helper(X,Y,max_depth,node.leftHeuristic,currentDepth+1,featuresUsed),DT_train_binary_helper(X,Y,max_depth,node.rightHeuristic,currentDepth+1,featuresUsed))
-	return node
+		ig = calcIG(h,hNo,hYes,X,item)
+		# print(ig)
 
-def removeFeature(binary,X,Y,featureNumber):
-	removeCount = 0
-	for i in range(0,len(X)):
-		if(X[i-removeCount][featureNumber] == binary):
-			X = np.delete(X,i-removeCount,0)
-			Y = np.delete(Y,i-removeCount,0)
-			removeCount += 1
-	return X,Y
+		# If found a better IG, then store all the variables from feature
+		if(ig > bestIG):
+			bestIG = ig
+			bestFeature = item
+			bestHNo = hNo
+			bestHYes = hYes
+			bestXNo = xNo
+			bestYNo = yNo
+			bestXYes = xYes
+			bestYYes = yYes
 
+	# Remove best feature choosen
+	featuresUsed.remove(bestFeature)
+	# print(featuresUsed)
+
+	# Increment depth by 1
+	currentDepth +=1
+	# print(currentDepth)
+
+	return([bestFeature,DT_train_binary_helper(bestXNo,bestYNo,max_depth,bestHNo,currentDepth,featuresUsed),DT_train_binary_helper(bestXYes,bestYYes,max_depth,bestHYes,currentDepth,featuresUsed)])
 
 # X = Feature array
 # Y = Label array
@@ -74,31 +81,20 @@ def removeFeature(binary,X,Y,featureNumber):
 # This funtion can also only take 2 paramaters. If 2 parameters are only called
 # this function will calculate the heuristic based on the label array only.
 # This featured would be used when trying to calc the heuristic of the init DT.
-def calcHeuristic(X,Y,boolean = None,index = 0):
-	search = 1 # either 0 or 1
-	if(boolean is None):
-		X = Y
-	elif(boolean is False):
-		search = 0
-
-	count = 0
+def calcHeuristic(Y):
+	yesCount = 0
 	total = 0
-	for i in range(0,len(X)):
-		# if feature is the same as search(yes/no)
-		if(X[i][index] == search or boolean is None):
-			total += 1
-			# the label is 1(yes), aka counting the yeses
-			if Y[i][0] == 1:
-				count += 1
-	
-	if(total == 0):
-		return 0
-	percent = count/total # this is the percent of yeses
+	for item in Y:
+		if item == 1:
+			yesCount +=1
+		total +=1 
+
+	percent = yesCount/total # this is the percent of yeses
 	# This checks if python will run into a RuntimeWarning b/c log(0)
-	if(percent != 0 and (1-percent) != 0):
-		h = percent*np.log2(percent)
-		h += (1-percent)*np.log2(1-percent)
-	else:
+	try:
+		h = percent*math.log2(percent)
+		h += (1-percent)*math.log2(1-percent)
+	except:
 		h = 0
 	return abs(h) # Absolute value
 
@@ -111,21 +107,20 @@ def calcIG(h,leftHeuristic,rightHeuristic,X,index):
 	ig = h - ((1-percent)*leftHeuristic) - (percent*rightHeuristic)
 	return ig
 
-def printTree(node,depth):
-	if(node is None):
-		return
-	print("Depth:" + str(depth) + " [", end='')
-	for n in node.leaves:
-		if n is None:
-			print("Empty|", end='')
-		else:
-			print(str(n.key) + "|", end='')
-	print("]")
-	printTree(node.leaves[0],depth+1)
-	printTree(node.leaves[1],depth+1)
+def findGreatestLabel(Y):
+	count = {
+		0:0,
+		1:0
+	}
+	for item in Y:
+		count[item[0]] += 1
+	if(count[0] >= count[1]):
+		return 0
+	else:
+		return 1
+
 
 def DT_test_binary(X,Y,DT):
-
 	pass
 
 if __name__ == "__main__":
@@ -145,7 +140,7 @@ if __name__ == "__main__":
 	#last 5
 	test4 = np.array([[1,1,0,1,0,0,1],[1,0,1,0,1,1,1],[1,1,0,1,1,0,1],[1,1,0,0,1,1,0],[0,0,0,1,0,1,1]])
 	test4label = np.array([[1],[0],[1],[1],[0]])
-	#middle 2-6
+	#middle 2-6 
 	test5 = np.array([[0,0,1,1,0,1,1],[0,1,0,0,1,0,0],[1,1,0,1,0,0,1],[1,0,1,0,1,1,1],[1,1,0,1,1,0,1]])
 	test5label = np.array([[1],[0],[1],[0],[1]])
 	#middle 3-7
