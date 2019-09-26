@@ -124,6 +124,7 @@ def DT_test_binary(X,Y,DT):
 	correntCount = 0
 	for i in range(0,len(X)):
 		result = DT_test_binary_helper(X[i],DT)
+		# print(result)
 		if(result == Y[i]):
 			correntCount +=1
 
@@ -131,17 +132,39 @@ def DT_test_binary(X,Y,DT):
 	return correntCount / len(X)
 
 def DT_test_binary_helper(X,DT):
+	if(isinstance(DT,int)):
+		return DT
 	# Left Side
-	if(isinstance(DT[1],int) and X[DT[0]] == 0):
-		return DT[1]
+	if(X[DT[0]] == 0):
+		#return DT[1]
+		return DT_test_binary_helper(X,DT[1])
+
 	# Right side
-	elif(isinstance(DT[2],int) and X[DT[0]] == 1):
-		return DT[2]
-	else:
-		if(X[DT[0]] == 0):
-			return DT_test_binary_helper(X,DT[1])
-		else:
-			return DT_test_binary_helper(X,DT[2])
+	elif(X[DT[0]] == 1):
+		#return DT[2]
+	 	return DT_test_binary_helper(X,DT[2])
+
+	
+	
+	# else:
+	# 	if(X[DT[0]] == 0):
+	# 		return DT_test_binary_helper(X,DT[1])
+	# 	else:
+	# 		return DT_test_binary_helper(X,DT[2])
+
+def DT_train_binary_best(X_train, Y_train, X_val, Y_val):
+	dtArray = []
+	for i in range(0,len(X_train[0])):
+		dtArray.append(DT_train_binary(X_train,Y_train,i+1))
+
+	bestDT = None
+	bestAccuracy = 0
+	for dt in dtArray:
+		accuracy = DT_test_binary(X_val,Y_val,dt)
+		if(accuracy > bestAccuracy):
+			bestAccuracy = accuracy
+			bestDT = dt
+	return bestDT
 
 if __name__ == "__main__":
 	#first example in project
@@ -149,7 +172,7 @@ if __name__ == "__main__":
 	Y = np.array([[1],[1],[0]])
 
 	#netflix
-	test1 = np.array([[1,1,1,0],[1,1,1,1],[1,1,1,1],[0,0,0,1],[0,0,1,1],[0,0,1,0],[0,0,0,0],[1,0,1,0],[1,1,1,0],[0,0,1,1]])
+	test1 = np.array([[1,1,0,0],[1,1,1,1],[1,1,1,1],[0,0,0,1],[0,0,1,1],[0,0,1,0],[0,0,0,0],[1,0,1,0],[1,1,1,0],[0,0,1,1]])
 	test1label = np.array([[0],[1],[1],[0],[0],[1],[0],[0],[1],[0]])
 	# all 8
 	test2 = np.array([[1,1,1,0,1,1,0],[0,0,1,1,0,1,1],[0,1,0,0,1,0,0],[1,1,0,1,0,0,1],[1,0,1,0,1,1,1],[1,1,0,1,1,0,1],[1,1,0,0,1,1,0],[0,0,0,1,0,1,1]])
@@ -175,11 +198,25 @@ if __name__ == "__main__":
 	test8 = np.array([[0,1],[0,0],[1,0],[0,0],[1,1]])
 	test8label = np.array([[1],[0],[0],[0],[1]])
 
-	DT = DT_train_binary(test1,test1label,-1)
 	#DT_train_binary(test3,test3label,5)
 	#DT_train_binary(test4,test4label,5)
 	#DT_train_binary(test5,test5label,5)
 	#DT_train_binary(test6,test6label,5)
 	#DT_train_binary(test7,test7label,-1)
 	#DT_train_binary(test8,test8label,-1)
-	accuracy = DT_test_binary(test1,test1label,DT)
+	
+
+	tx1 = np.array([[0, 1], [0, 0], [1, 0], [0, 0],  [1, 1]])
+	ty1 = np.array([[1], [0], [0], [0], [1]])
+
+	vx1 = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+	vy1 = np.array([[0], [1], [0], [1]])
+
+	tx2 = np.array([[0, 1, 0, 0], [0, 0, 0, 1], [1, 0, 0, 0], [0, 0, 1, 1], [1, 1, 0, 1], [1, 1, 0, 0], [1, 0, 0, 1], [0, 1, 0, 1], [0, 1, 0, 0]])
+	ty2 = np.array([[0], [1], [0], [0], [1], [0], [1], [1], [1]])
+	vx2 = np.array([[1, 0, 0, 0], [0, 0, 1, 1], [1, 1, 0, 1], [1, 1, 0, 0], [1, 0, 0, 1], [0, 1, 0, 0]])
+	vy2 = np.array([[0], [0], [1], [0], [1], [1]])
+	DT = DT_train_binary(test1,test1label,-1)
+	#accuracy = DT_test_binary(test1,test1label,DT)
+	print(DT_test_binary(test1,test1label,DT))
+	#print(DT_train_binary_best(tx2,ty2,vx2,vy2))
