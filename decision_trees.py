@@ -187,29 +187,39 @@ def DT_train_binary_best(X_train, Y_train, X_val, Y_val):
 # # # # # # # # # # # # # DT_TRAIN_REAL # # # # # # # # # # # # 
 ###############################################################
 def DT_train_real(X,Y,max_depth):
-	X = transformReal(X)
-	# print(X)
-	return DT_train_binary(X,Y,max_depth)
+	avgs = getAverages(X)
+	X_converted = convertToBinary(X,avgs)
+	DT = DT_train_binary(X_converted,Y,max_depth)
+	DT.append(avgs)
+	return DT
 
 ##############################################################
 # # # # # # # # # # # # # DT_TEST_REAL # # # # # # # # # # # # 
 ##############################################################
 def DT_test_real(X,Y,DT):
-	X = transformReal(X)
-	return DT_test_binary(X,Y,DT)
-
+	avgs = DT[len(DT)-1]
+	X_converted = convertToBinary(X,avgs)
+	DT_converted = DT[:-1]
+	accuracy = DT_test_binary(X_converted,Y,DT_converted)
+	return accuracy
 ################################################################
 # # # # # # # # # # # DT_TRAIN_REAL_BEST # # # # # # # # # # # 
 ################################################################
 def DT_train_real_best(X_train,Y_train,X_val,Y_val):
-	X_train = transformReal(X_train)
-	X_val = transformReal(X_val)
-	return DT_train_binary_best(X_train,Y_train,X_val,Y_val)
+	avgs = getAverages(X_train)
+	X_train_converted = convertToBinary(X_train,avgs)
+	X_val_converted = convertToBinary(X_val,avgs)
+	DT = DT_train_binary_best(X_train,Y_train,X_val,Y_val)
+	return DT
 
-def transformReal(X):
+def getAverages(X):
 	# lol this is the moment I found out about list comprehension 
 	avgs = [sum(i)/len(X) for i in zip(*X)]
 	# print(avgs)
+	output = convertToBinary(X,avgs)
+	return avgs
+
+def convertToBinary(X,avgs):
 	output = []
 	for item in X:
 		tmp = []
@@ -277,7 +287,9 @@ if __name__ == "__main__":
 	#print(DT_test_binary(test1,test1label,DT))
 	#print(DT_train_binary_best(tx2,ty2,vx2,vy2))
 	
-	#real = np.array([[4.8, 3.4, 1.9, 0.2], [5, 3, 1.6, 1.2], [5, 3.4, 1.6, 0.2], [5.2, 3.5, 1.5, 0.2], [5.2, 3.4, 1.4, 0.2], [4.7, 3.2, 1.6, 0.2], [4.8, 3.1, 1.6, 0.2], [5.4, 3.4, 1.5, 0.4], [7, 3.2, 4.7, 1.4], [6.4, 3.2, 4.7, 1.5], [6.9, 3.1, 4.9, 1.5], [5.5, 2.3, 4, 1.3], [6.5, 2.8, 4.6, 1.5], [5.7, 2.8, 4.5, 1.3], [6.3, 3.3, 4.7, 1.6], [4.9, 2.4, 3.3, 1]])
-	#realL = np.array([[1], [1], [1], [1], [1], [1], [1], [1], [0], [0], [0], [0], [0], [0], [0], [0]])
-	#dt_real = DT_train_real(real,realL,-1)
+	real = np.array([[4.8, 3.4, 1.9, 0.2], [5, 3, 1.6, 1.2], [5, 3.4, 1.6, 0.2], [5.2, 3.5, 1.5, 0.2], [5.2, 3.4, 1.4, 0.2], [4.7, 3.2, 1.6, 0.2], [4.8, 3.1, 1.6, 0.2], [5.4, 3.4, 1.5, 0.4], [7, 3.2, 4.7, 1.4], [6.4, 3.2, 4.7, 1.5], [6.9, 3.1, 4.9, 1.5], [5.5, 2.3, 4, 1.3], [6.5, 2.8, 4.6, 1.5], [5.7, 2.8, 4.5, 1.3], [6.3, 3.3, 4.7, 1.6], [4.9, 2.4, 3.3, 1]])
+	realL = np.array([[1], [1], [1], [1], [1], [1], [1], [1], [0], [0], [0], [0], [0], [0], [0], [0]])
+	dt_real = DT_train_real(real,realL,-1)
+	#print(dt_real)
+	DT_test_real(real,realL,dt_real)
 	#print(DT_test_real(real,realL,dt_real))
