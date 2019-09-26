@@ -3,6 +3,10 @@ import numpy as np
 import sys # Used for getting a max value
 import math # Used for log, sorry np.log2 is trash because I can't use try/except blocks
 
+#################################################################
+# # # # # # # # # # # # # DT_TRAIN_BINARY # # # # # # # # # # # #
+#################################################################
+
 def DT_train_binary(X,Y,max_depth):
 	h = calcHeuristic(Y) 
 	# print(h)
@@ -89,7 +93,6 @@ def calcHeuristic(Y):
 			yesCount +=1
 		total +=1 
 
-
 	# This checks if python will run into a RuntimeWarning b/c log(0)
 	try:
 		percent = yesCount/total # this is the percent of yeses
@@ -120,10 +123,14 @@ def findGreatestLabel(Y):
 	else:
 		return 1
 
+		
+##################################################################
+# # # # # # # # # # # # # DT_TEST_BINARY # # # # # # # # # # # # #
+##################################################################
 def DT_test_binary(X,Y,DT):
 	correntCount = 0
 	for i in range(0,len(X)):
-		result = DT_test_binary_helper(X[i],DT)
+		result = DT_make_prediction(X[i],DT)
 		# print(result)
 		if(result == Y[i]):
 			correntCount +=1
@@ -131,27 +138,32 @@ def DT_test_binary(X,Y,DT):
 	# print(correntCount / len(X))
 	return correntCount / len(X)
 
-def DT_test_binary_helper(X,DT):
+################################################################
+# # # # # # # # # # # DT_MAKE_PREDICTION # # # # # # # # # # # # 
+################################################################
+def DT_make_prediction(x,DT):
 	if(isinstance(DT,int)):
 		return DT
 	# Left Side
-	if(X[DT[0]] == 0):
-		#return DT[1]
-		return DT_test_binary_helper(X,DT[1])
-
+	if(x[DT[0]] == 0):
+		return DT_make_prediction(x,DT[1])
 	# Right side
-	elif(X[DT[0]] == 1):
-		#return DT[2]
-	 	return DT_test_binary_helper(X,DT[2])
+	elif(x[DT[0]] == 1):
+	 	return DT_make_prediction(x,DT[2])
 
-	
-	
-	# else:
-	# 	if(X[DT[0]] == 0):
-	# 		return DT_test_binary_helper(X,DT[1])
-	# 	else:
-	# 		return DT_test_binary_helper(X,DT[2])
+# def DT_test_binary_helper(X,DT):
+# 	if(isinstance(DT,int)):
+# 		return DT
+# 	# Left Side
+# 	if(X[DT[0]] == 0):
+# 		return DT_test_binary_helper(X,DT[1])
+# 	# Right side
+# 	elif(X[DT[0]] == 1):
+# 	 	return DT_test_binary_helper(X,DT[2])
 
+################################################################
+# # # # # # # # # # # DT_TRAIN_BINARY_BEST # # # # # # # # # # # 
+################################################################
 def DT_train_binary_best(X_train, Y_train, X_val, Y_val):
 	dtArray = []
 	for i in range(0,len(X_train[0])):
@@ -165,6 +177,7 @@ def DT_train_binary_best(X_train, Y_train, X_val, Y_val):
 			bestAccuracy = accuracy
 			bestDT = dt
 	return bestDT
+
 
 if __name__ == "__main__":
 	#first example in project
@@ -190,9 +203,6 @@ if __name__ == "__main__":
 	test6 = np.array([[0,1,0,0,1,0,0],[1,1,0,1,0,0,1],[1,0,1,0,1,1,1],[1,1,0,1,1,0,1],[1,1,0,0,1,1,0]])
 	test6label = np.array([[0],[1],[0],[1],[1]])
 	max_depth = -1
-	#custom
-	test7 = np.array([[1,1,0],[1,1,0],[1,1,1],[1,0,0],[1,0,1],[0,0,1],[0,1,1],[0,1,0],[0,0,0]])
-	test7label = np.array([[1],[1],[1],[0],[0],[1],[1],[0],[0]])
 
 	#Traing set 1
 	test8 = np.array([[0,1],[0,0],[1,0],[0,0],[1,1]])
@@ -202,7 +212,6 @@ if __name__ == "__main__":
 	#DT_train_binary(test4,test4label,5)
 	#DT_train_binary(test5,test5label,5)
 	#DT_train_binary(test6,test6label,5)
-	#DT_train_binary(test7,test7label,-1)
 	#DT_train_binary(test8,test8label,-1)
 	
 
@@ -217,6 +226,7 @@ if __name__ == "__main__":
 	vx2 = np.array([[1, 0, 0, 0], [0, 0, 1, 1], [1, 1, 0, 1], [1, 1, 0, 0], [1, 0, 0, 1], [0, 1, 0, 0]])
 	vy2 = np.array([[0], [0], [1], [0], [1], [1]])
 	DT = DT_train_binary(test1,test1label,-1)
-	#accuracy = DT_test_binary(test1,test1label,DT)
-	print(DT_test_binary(test1,test1label,DT))
+	accuracy = DT_test_binary(test1,test1label,DT)
+	#print(DT_test_binary(test1,test1label,DT))
 	#print(DT_train_binary_best(tx2,ty2,vx2,vy2))
+	
