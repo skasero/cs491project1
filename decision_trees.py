@@ -1,4 +1,9 @@
 #!/usr/bin/python3
+
+# Project 1
+# Description: Decision Trees
+# Authors: Spencer Kase Rohlfing & Dhruv Bhatt 
+# 
 import numpy as np
 import sys # Used for getting a max value
 import math # Used for log, sorry np.log2 is trash because I can't use try/except blocks
@@ -178,6 +183,44 @@ def DT_train_binary_best(X_train, Y_train, X_val, Y_val):
 			bestDT = dt
 	return bestDT
 
+###############################################################
+# # # # # # # # # # # # # DT_TRAIN_REAL # # # # # # # # # # # # 
+###############################################################
+def DT_train_real(X,Y,max_depth):
+	X = transformReal(X)
+	# print(X)
+	return DT_train_binary(X,Y,max_depth)
+
+##############################################################
+# # # # # # # # # # # # # DT_TEST_REAL # # # # # # # # # # # # 
+##############################################################
+def DT_test_real(X,Y,DT):
+	X = transformReal(X)
+	return DT_test_binary(X,Y,DT)
+
+################################################################
+# # # # # # # # # # # DT_TRAIN_REAL_BEST # # # # # # # # # # # 
+################################################################
+def DT_train_real_best(X_train,Y_train,X_val,Y_val):
+	X_train = transformReal(X_train)
+	X_val = transformReal(X_val)
+	return DT_train_binary_best(X_train,Y_train,X_val,Y_val)
+
+def transformReal(X):
+	# lol this is the moment I found out about list comprehension 
+	avgs = [sum(i)/len(X) for i in zip(*X)]
+	# print(avgs)
+	output = []
+	for item in X:
+		tmp = []
+		for i in range(0,len(item)):
+			if(item[i] > avgs[i]):
+				tmp.append(1)
+			else:
+				tmp.append(0)
+		output.append(tmp)
+	return output
+
 
 if __name__ == "__main__":
 	#first example in project
@@ -208,12 +251,16 @@ if __name__ == "__main__":
 	test8 = np.array([[0,1],[0,0],[1,0],[0,0],[1,1]])
 	test8label = np.array([[1],[0],[0],[0],[1]])
 
-	#DT_train_binary(test3,test3label,5)
-	#DT_train_binary(test4,test4label,5)
-	#DT_train_binary(test5,test5label,5)
+	#DT1 = DT_train_binary(test3,test3label,5)
+	#DT2 = DT_train_binary(test4,test4label,5)
+	#DT3 = DT_train_binary(test6,test6label,5)
+	food = np.array([[0, 1, 1, 1, 0, 1, 0], [0, 1, 1, 1, 0, 0, 1], [1, 0, 0, 1, 1, 0, 0]])
+	foodL = np.array([[0], [1], [0]])
+	#print(DT_test_binary(food,foodL,DT1))
+	#print(DT_test_binary(food,foodL,DT2))
+	#print(DT_test_binary(food,foodL,DT3))
 	#DT_train_binary(test6,test6label,5)
 	#DT_train_binary(test8,test8label,-1)
-	
 
 	tx1 = np.array([[0, 1], [0, 0], [1, 0], [0, 0],  [1, 1]])
 	ty1 = np.array([[1], [0], [0], [0], [1]])
@@ -225,8 +272,12 @@ if __name__ == "__main__":
 	ty2 = np.array([[0], [1], [0], [0], [1], [0], [1], [1], [1]])
 	vx2 = np.array([[1, 0, 0, 0], [0, 0, 1, 1], [1, 1, 0, 1], [1, 1, 0, 0], [1, 0, 0, 1], [0, 1, 0, 0]])
 	vy2 = np.array([[0], [0], [1], [0], [1], [1]])
-	DT = DT_train_binary(test1,test1label,-1)
-	accuracy = DT_test_binary(test1,test1label,DT)
+	#DT = DT_train_binary(test1,test1label,-1)
+	#accuracy = DT_test_binary(test1,test1label,DT)
 	#print(DT_test_binary(test1,test1label,DT))
 	#print(DT_train_binary_best(tx2,ty2,vx2,vy2))
 	
+	#real = np.array([[4.8, 3.4, 1.9, 0.2], [5, 3, 1.6, 1.2], [5, 3.4, 1.6, 0.2], [5.2, 3.5, 1.5, 0.2], [5.2, 3.4, 1.4, 0.2], [4.7, 3.2, 1.6, 0.2], [4.8, 3.1, 1.6, 0.2], [5.4, 3.4, 1.5, 0.4], [7, 3.2, 4.7, 1.4], [6.4, 3.2, 4.7, 1.5], [6.9, 3.1, 4.9, 1.5], [5.5, 2.3, 4, 1.3], [6.5, 2.8, 4.6, 1.5], [5.7, 2.8, 4.5, 1.3], [6.3, 3.3, 4.7, 1.6], [4.9, 2.4, 3.3, 1]])
+	#realL = np.array([[1], [1], [1], [1], [1], [1], [1], [1], [0], [0], [0], [0], [0], [0], [0], [0]])
+	#dt_real = DT_train_real(real,realL,-1)
+	#print(DT_test_real(real,realL,dt_real))
