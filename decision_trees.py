@@ -3,7 +3,8 @@
 # Project 1
 # Description: Decision Trees
 # Authors: Spencer Kase Rohlfing & Dhruv Bhatt 
-# 
+# 9/26/19
+
 import numpy as np
 import sys # Used for getting a max value
 import math # Used for log, sorry np.log2 is trash because I can't use try/except blocks
@@ -13,19 +14,19 @@ import math # Used for log, sorry np.log2 is trash because I can't use try/excep
 #################################################################
 
 def DT_train_binary(X,Y,max_depth):
-	h = calcHeuristic(Y) 
+	h = calcEntropy(Y) 
 	# print(h)
 	featuresUsed = []
 	for i in range(0,len(X[0])):
 		featuresUsed.append(i)
 	DT = DT_train_binary_helper(X,Y,max_depth,h,0,featuresUsed)
-	print(DT)
+	# print(DT)
 	return DT
 
 def DT_train_binary_helper(X,Y,max_depth,h,currentDepth,featuresUsed):
 	# Checking if were at the current max depth or if all features have been used
 	# Also checks if h is 0
-	if(max_depth == currentDepth or not featuresUsed or h==0):
+	if(max_depth == currentDepth or not featuresUsed or h==0 and currentDepth != 0):
 		return findGreatestLabel(Y)
 	
 	# This is like -INT_MAX in C++. I could just use a small number, but...
@@ -54,8 +55,8 @@ def DT_train_binary_helper(X,Y,max_depth,h,currentDepth,featuresUsed):
 				xYes.append(X[i])
 				yYes.append(Y[i])
 
-		hNo = calcHeuristic(yNo)
-		hYes = calcHeuristic(yYes)
+		hNo = calcEntropy(yNo)
+		hYes = calcEntropy(yYes)
 		# print(hNo)
 		# print(hYes)
 
@@ -88,9 +89,9 @@ def DT_train_binary_helper(X,Y,max_depth,h,currentDepth,featuresUsed):
 # boolean = if the value in the feature we are checking is 0 or 1 (yes or no)
 # index of the feature
 # This funtion can also only take 2 paramaters. If 2 parameters are only called
-# this function will calculate the heuristic based on the label array only.
-# This featured would be used when trying to calc the heuristic of the init DT.
-def calcHeuristic(Y):
+# this function will calculate the Entropy based on the label array only.
+# This featured would be used when trying to calc the Entropy of the init DT.
+def calcEntropy(Y):
 	yesCount = 0
 	total = 0
 	for item in Y:
@@ -107,15 +108,17 @@ def calcHeuristic(Y):
 		h = 0
 	return abs(h) # Absolute value
 
-def calcIG(h,leftHeuristic,rightHeuristic,X,index):
+# Used to calculate the Information Gain of a split
+def calcIG(h,leftEntropy,rightEntropy,X,index):
 	count = 0
 	for item in X:
 		if(item[index] == 1):
 			count += 1
 	percent = count/len(X)
-	ig = h - ((1-percent)*leftHeuristic) - (percent*rightHeuristic)
+	ig = h - ((1-percent)*leftEntropy) - (percent*rightEntropy)
 	return ig
 
+# Used to find if there are more 0s or 1s in a feature
 def findGreatestLabel(Y):
 	count = {
 		0:0,
@@ -156,16 +159,6 @@ def DT_make_prediction(x,DT):
 	elif(x[DT[0]] == 1):
 	 	return DT_make_prediction(x,DT[2])
 
-# def DT_test_binary_helper(X,DT):
-# 	if(isinstance(DT,int)):
-# 		return DT
-# 	# Left Side
-# 	if(X[DT[0]] == 0):
-# 		return DT_test_binary_helper(X,DT[1])
-# 	# Right side
-# 	elif(X[DT[0]] == 1):
-# 	 	return DT_test_binary_helper(X,DT[2])
-
 ################################################################
 # # # # # # # # # # # DT_TRAIN_BINARY_BEST # # # # # # # # # # # 
 ################################################################
@@ -181,6 +174,7 @@ def DT_train_binary_best(X_train, Y_train, X_val, Y_val):
 		if(accuracy > bestAccuracy):
 			bestAccuracy = accuracy
 			bestDT = dt
+	# print(bestAccuracy)
 	return bestDT
 
 ###############################################################
@@ -209,9 +203,10 @@ def DT_train_real_best(X_train,Y_train,X_val,Y_val):
 	avgs = getAverages(X_train)
 	X_train_converted = convertToBinary(X_train,avgs)
 	X_val_converted = convertToBinary(X_val,avgs)
-	DT = DT_train_binary_best(X_train,Y_train,X_val,Y_val)
+	DT = DT_train_binary_best(X_train_converted,Y_train,X_val_converted,Y_val)
 	return DT
 
+# Returns a list of averages for the features
 def getAverages(X):
 	# lol this is the moment I found out about list comprehension 
 	avgs = [sum(i)/len(X) for i in zip(*X)]
@@ -219,6 +214,9 @@ def getAverages(X):
 	output = convertToBinary(X,avgs)
 	return avgs
 
+# Takes in samples and averages list and returns a sample list
+# based on if the real number was less than or greater than the average
+# value for each feature
 def convertToBinary(X,avgs):
 	output = []
 	for item in X:
@@ -230,66 +228,3 @@ def convertToBinary(X,avgs):
 				tmp.append(0)
 		output.append(tmp)
 	return output
-
-
-if __name__ == "__main__":
-	#first example in project
-	X = np.array([[0,1,0,1],[1,1,1,1],[0,0,0,1]])
-	Y = np.array([[1],[1],[0]])
-
-	#netflix
-	test1 = np.array([[1,1,0,0],[1,1,1,1],[1,1,1,1],[0,0,0,1],[0,0,1,1],[0,0,1,0],[0,0,0,0],[1,0,1,0],[1,1,1,0],[0,0,1,1]])
-	test1label = np.array([[0],[1],[1],[0],[0],[1],[0],[0],[1],[0]])
-	# all 8
-	test2 = np.array([[1,1,1,0,1,1,0],[0,0,1,1,0,1,1],[0,1,0,0,1,0,0],[1,1,0,1,0,0,1],[1,0,1,0,1,1,1],[1,1,0,1,1,0,1],[1,1,0,0,1,1,0],[0,0,0,1,0,1,1]])
-	test2label = np.array([[1],[1],[0],[1],[0],[1],[1],[0]])
-	#first 5
-	test3 = np.array([[1,1,1,0,1,1,0],[0,0,1,1,0,1,1],[0,1,0,0,1,0,0],[1,1,0,1,0,0,1],[1,0,1,0,1,1,1]])
-	test3label = np.array([[1],[1],[0],[1],[0]])
-	#last 5
-	test4 = np.array([[1,1,0,1,0,0,1],[1,0,1,0,1,1,1],[1,1,0,1,1,0,1],[1,1,0,0,1,1,0],[0,0,0,1,0,1,1]])
-	test4label = np.array([[1],[0],[1],[1],[0]])
-	#middle 2-6 
-	test5 = np.array([[0,0,1,1,0,1,1],[0,1,0,0,1,0,0],[1,1,0,1,0,0,1],[1,0,1,0,1,1,1],[1,1,0,1,1,0,1]])
-	test5label = np.array([[1],[0],[1],[0],[1]])
-	#middle 3-7
-	test6 = np.array([[0,1,0,0,1,0,0],[1,1,0,1,0,0,1],[1,0,1,0,1,1,1],[1,1,0,1,1,0,1],[1,1,0,0,1,1,0]])
-	test6label = np.array([[0],[1],[0],[1],[1]])
-	max_depth = -1
-
-	#Traing set 1
-	test8 = np.array([[0,1],[0,0],[1,0],[0,0],[1,1]])
-	test8label = np.array([[1],[0],[0],[0],[1]])
-
-	#DT1 = DT_train_binary(test3,test3label,5)
-	#DT2 = DT_train_binary(test4,test4label,5)
-	#DT3 = DT_train_binary(test6,test6label,5)
-	food = np.array([[0, 1, 1, 1, 0, 1, 0], [0, 1, 1, 1, 0, 0, 1], [1, 0, 0, 1, 1, 0, 0]])
-	foodL = np.array([[0], [1], [0]])
-	#print(DT_test_binary(food,foodL,DT1))
-	#print(DT_test_binary(food,foodL,DT2))
-	#print(DT_test_binary(food,foodL,DT3))
-	#DT_train_binary(test6,test6label,5)
-	#DT_train_binary(test8,test8label,-1)
-
-	tx1 = np.array([[0, 1], [0, 0], [1, 0], [0, 0],  [1, 1]])
-	ty1 = np.array([[1], [0], [0], [0], [1]])
-
-	vx1 = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-	vy1 = np.array([[0], [1], [0], [1]])
-
-	tx2 = np.array([[0, 1, 0, 0], [0, 0, 0, 1], [1, 0, 0, 0], [0, 0, 1, 1], [1, 1, 0, 1], [1, 1, 0, 0], [1, 0, 0, 1], [0, 1, 0, 1], [0, 1, 0, 0]])
-	ty2 = np.array([[0], [1], [0], [0], [1], [0], [1], [1], [1]])
-	vx2 = np.array([[1, 0, 0, 0], [0, 0, 1, 1], [1, 1, 0, 1], [1, 1, 0, 0], [1, 0, 0, 1], [0, 1, 0, 0]])
-	vy2 = np.array([[0], [0], [1], [0], [1], [1]])
-	#DT = DT_train_binary(test1,test1label,-1)
-	#accuracy = DT_test_binary(test1,test1label,DT)
-	#print(DT_test_binary(test1,test1label,DT))
-	#print(DT_train_binary_best(tx2,ty2,vx2,vy2))
-	
-	real = np.array([[4.8, 3.4, 1.9, 0.2], [5, 3, 1.6, 1.2], [5, 3.4, 1.6, 0.2], [5.2, 3.5, 1.5, 0.2], [5.2, 3.4, 1.4, 0.2], [4.7, 3.2, 1.6, 0.2], [4.8, 3.1, 1.6, 0.2], [5.4, 3.4, 1.5, 0.4], [7, 3.2, 4.7, 1.4], [6.4, 3.2, 4.7, 1.5], [6.9, 3.1, 4.9, 1.5], [5.5, 2.3, 4, 1.3], [6.5, 2.8, 4.6, 1.5], [5.7, 2.8, 4.5, 1.3], [6.3, 3.3, 4.7, 1.6], [4.9, 2.4, 3.3, 1]])
-	realL = np.array([[1], [1], [1], [1], [1], [1], [1], [1], [0], [0], [0], [0], [0], [0], [0], [0]])
-	dt_real = DT_train_real(real,realL,-1)
-	#print(dt_real)
-	DT_test_real(real,realL,dt_real)
-	#print(DT_test_real(real,realL,dt_real))
